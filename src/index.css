@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.rdp {
+  --rdp-cell-size: 40px !important;
+  --rdp-accent-color: #111827;
+  --rdp-background-color: #f8fafc;
+  margin: 0;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: #f3f4f6;
+}
+
+.rdp-day_selected {
+  background-color: #111827 !important;
+  color: white !important;
+}
+
+.rdp-day_today:not(.rdp-day_outside):not(.rdp-day_selected) {
+  background-color: #fce7f3 !important;
+  font-weight: bold;
+}
+
+.rdp-day:not(.rdp-day_outside):not(.rdp-day_selected) {
+  background-color: #f3f4f6;
+}
+
+.rdp-day.rdp-day_hasAppointments:not(.rdp-day_outside):not(.rdp-day_selected) {
+  background-color: #dcfce7 !important;
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gray-900 text-white px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors duration-200 flex items-center gap-2;
+  }
+
+  .btn-icon {
+    @apply p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+  }
+
+  .table-header {
+    @apply text-left px-6 py-3.5 text-xs font-medium text-gray-500 uppercase tracking-wider;
+  }
+
+  .table-cell {
+    @apply px-6 py-4 text-sm text-gray-700 whitespace-nowrap;
+  }
+
+  .form-input {
+    @apply w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent placeholder-gray-400 transition-shadow duration-200;
+  }
+
+  .form-label {
+    @apply block text-sm font-medium mb-1.5 text-gray-700;
+  }
+
+  .page-title {
+    @apply text-2xl font-semibold text-gray-900 tracking-tight;
+  }
+
+  .page-subtitle {
+    @apply text-sm text-gray-500 mt-1;
+  }
+
+  .section-title {
+    @apply text-lg font-medium text-gray-900 mb-4;
+  }
+}
+
+/* Table styles */
+table {
+  @apply divide-y divide-gray-200;
+}
+
+tbody {
+  @apply divide-y divide-gray-200;
+}
+
+/* Calendar styles */
+.calendar-card {
+  @apply card p-3 bg-white;
+}
+
+.calendar-card .rdp-months {
+  @apply justify-center;
+}
+
+/* Form overlay */
+.form-overlay {
+  @apply fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+}
+
+.form-container {
+  @apply bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto;
+}
+
+.form-header {
+  @apply flex items-center justify-between p-6 border-b border-gray-200;
+}
+
+.form-body {
+  @apply p-6;
+}
+
+.form-footer {
+  @apply flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50;
+}
+
+/* Status badges */
+.status-badge {
+  @apply px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.status-badge-success {
+  @apply bg-green-50 text-green-700;
+}
+
+.status-badge-pending {
+  @apply bg-yellow-50 text-yellow-700;
+}
+
+/* Transitions */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
