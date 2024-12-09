@@ -43,6 +43,7 @@ export const Calendar = () => {
     return Array.from(uniqueDays).map(date => new Date(date));
   };
 
+  // Updated to handle Option type
   const handleClientSelect = (option: Option) => {
     setSelectedClient(option);
     setNewAppointment(prev => ({ ...prev, clientId: option.id }));
