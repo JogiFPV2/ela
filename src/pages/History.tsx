@@ -6,13 +6,13 @@ import { useApp } from '../context/AppContext';
 import { X, Check, Calendar as CalendarIcon } from 'lucide-react';
 import { DayPicker } from 'react-day-picker';
 import 'react-day-picker/dist/style.css';
-import type { Appointment, Client } from '../types';
+import type { Client } from '../types';
 
 export const History = () => {
   const location = useLocation();
   const { state } = useApp();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export const History = () => {
 
   const clearFilters = () => {
     setSelectedClient(null);
-    setSelectedDate(null);
+    setSelectedDate(undefined);
   };
 
   return (
@@ -99,10 +99,7 @@ export const History = () => {
             <DayPicker
               mode="single"
               selected={selectedDate}
-              onSelect={(date) => {
-                setSelectedDate(date);
-                setShowCalendar(false);
-              }}
+              onSelect={setSelectedDate}
               locale={pl}
             />
           </div>

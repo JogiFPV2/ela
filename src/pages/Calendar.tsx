@@ -7,7 +7,12 @@ import { useApp } from '../context/AppContext';
 import { Check, Trash2, Plus } from 'lucide-react';
 import { SearchableSelect } from '../components/SearchableSelect';
 import 'react-day-picker/dist/style.css';
-import type { Appointment, Client } from '../types';
+import type { Appointment } from '../types';
+
+interface Option {
+  id: string;
+  name: string;
+}
 
 export const Calendar = () => {
   const isDesktop = useMediaQuery({ minWidth: 768 });
@@ -15,7 +20,7 @@ export const Calendar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const { state, removeAppointment, updateAppointment, addAppointment } = useApp();
   const [showForm, setShowForm] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Option | null>(null);
   const [expandedAppointmentId, setExpandedAppointmentId] = useState<string | null>(null);
   const [newAppointment, setNewAppointment] = useState({
     clientId: '',
@@ -38,9 +43,9 @@ export const Calendar = () => {
     return Array.from(uniqueDays).map(date => new Date(date));
   };
 
-  const handleClientSelect = (client: Client) => {
-    setSelectedClient(client);
-    setNewAppointment(prev => ({ ...prev, clientId: client.id }));
+  const handleClientSelect = (option: Option) => {
+    setSelectedClient(option);
+    setNewAppointment(prev => ({ ...prev, clientId: option.id }));
   };
 
   const getDayAppointments = () => {
@@ -125,6 +130,11 @@ export const Calendar = () => {
     },
   };
 
+  const clientOptions: Option[] = state.clients.map(client => ({
+    id: client.id,
+    name: client.name
+  }));
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -155,7 +165,7 @@ export const Calendar = () => {
                   <div>
                     <label className="form-label">Klient</label>
                     <SearchableSelect
-                      options={state.clients}
+                      options={clientOptions}
                       value={selectedClient}
                       onChange={handleClientSelect}
                       placeholder="Wyszukaj klienta..."

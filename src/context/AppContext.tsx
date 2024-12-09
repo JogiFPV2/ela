@@ -41,24 +41,43 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
   });
 
   useEffect(() => {
-    // Początkowe pobranie danych
+    // Initial data fetch
     const fetchData = async () => {
       try {
         const [
-          { data: clients }, 
-          { data: services }, 
-          { data: appointments }
+          { data: clients, error: clientsError }, 
+          { data: services, error: servicesError }, 
+          { data: appointments, error: appointmentsError }
         ] = await Promise.all([
           supabase.from('clients').select('*'),
           supabase.from('services').select('*'),
           supabase.from('appointments').select('*')
         ]);
 
+        if (clientsError) throw clientsError;
+        if (servicesError) throw servicesError;
+        if (appointmentsError) throw appointmentsError;
+
         setState(prev => ({
           ...prev,
-          clients: clients || [],
+          clients: clients?.map(c => ({
+            id: c.id,
+            name: c.name,
+            phone: c.phone,
+            email: c.email || undefined,
+            createdAt: c.created_at
+          })) || [],
           services: services || [],
-          appointments: appointments || [],
+          appointments: appointments?.map(a => ({
+            id: a.id,
+            clientId: a.client_id,
+            serviceId: a.service_id,
+            date: a.date,
+            time: a.time,
+            isPaid: a.is_paid,
+            amount: a.amount,
+            notes: a.notes || undefined
+          })) || [],
           isLoading: false
         }));
       } catch (error) {
@@ -69,7 +88,7 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
     fetchData();
 
-    // Subskrypcje real-time
+    // Real-time subscriptions
     const clientsSubscription = supabase
       .channel('clients')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, 
@@ -77,7 +96,14 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           setState(prev => {
             const updatedClients = [...prev.clients];
             if (payload.eventType === 'INSERT') {
-              updatedClients.push(payload.new as Client);
+              const newClient = {
+                id: payload.new.id,
+                name: payload.new.name,
+                phone: payload.new.phone,
+                email: payload.new.email || undefined,
+                createdAt: payload.new.created_at
+              };
+              updatedClients.push(newClient);
             } else if (payload.eventType === 'DELETE') {
               const index = updatedClients.findIndex(c => c.id === payload.old.id);
               if (index !== -1) updatedClients.splice(index, 1);
@@ -113,13 +139,34 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           setState(prev => {
             const updatedAppointments = [...prev.appointments];
             if (payload.eventType === 'INSERT') {
-              updatedAppointments.push(payload.new as Appointment);
+              const newAppointment = {
+                id: payload.new.id,
+                clientId: payload.new.client_id,
+                serviceId: payload.new.service_id,
+                date: payload.new.date,
+                time: payload.new.time,
+                isPaid: payload.new.is_paid,
+                amount: payload.new.amount,
+                notes: payload.new.notes || undefined
+              };
+              updatedAppointments.push(newAppointment);
             } else if (payload.eventType === 'DELETE') {
               const index = updatedAppointments.findIndex(a => a.id === payload.old.id);
               if (index !== -1) updatedAppointments.splice(index, 1);
             } else if (payload.eventType === 'UPDATE') {
               const index = updatedAppointments.findIndex(a => a.id === payload.new.id);
-              if (index !== -1) updatedAppointments[index] = payload.new as Appointment;
+              if (index !== -1) {
+                updatedAppointments[index] = {
+                  id: payload.new.id,
+                  clientId: payload.new.client_id,
+                  serviceId: payload.new.service_id,
+                  date: payload.new.date,
+                  time: payload.new.time,
+                  isPaid: payload.new.is_paid,
+                  amount: payload.new.amount,
+                  notes: payload.new.notes || undefined
+                };
+              }
             }
             return { ...prev, appointments: updatedAppointments };
           });
@@ -136,18 +183,15 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addClient = async (client: Omit<Client, 'id' | 'createdAt'>) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('clients')
-        .insert([client])
-        .select()
-        .single();
+        .insert([{
+          name: client.name,
+          phone: client.phone,
+          email: client.email || null
+        }]);
 
       if (error) throw error;
-
-      setState(prev => ({
-        ...prev,
-        clients: [...prev.clients, data]
-      }));
     } catch (error) {
       console.error('Error adding client:', error);
       throw error;
@@ -162,12 +206,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', id);
 
       if (error) throw error;
-
-      setState(prev => ({
-        ...prev,
-        clients: prev.clients.filter(c => c.id !== id),
-        appointments: prev.appointments.filter(a => a.clientId !== id)
-      }));
     } catch (error) {
       console.error('Error removing client:', error);
       throw error;
@@ -176,18 +214,11 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addService = async (service: Omit<Service, 'id'>) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('services')
-        .insert([service])
-        .select()
-        .single();
+        .insert([service]);
 
       if (error) throw error;
-
-      setState(prev => ({
-        ...prev,
-        services: [...prev.services, data]
-      }));
     } catch (error) {
       console.error('Error adding service:', error);
       throw error;
@@ -202,12 +233,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', id);
 
       if (error) throw error;
-
-      setState(prev => ({
-        ...prev,
-        services: prev.services.filter(s => s.id !== id),
-        appointments: prev.appointments.filter(a => a.serviceId !== id)
-      }));
     } catch (error) {
       console.error('Error removing service:', error);
       throw error;
@@ -216,18 +241,19 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   const addAppointment = async (appointment: Omit<Appointment, 'id'>) => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('appointments')
-        .insert([appointment])
-        .select()
-        .single();
+        .insert([{
+          client_id: appointment.clientId,
+          service_id: appointment.serviceId,
+          date: appointment.date,
+          time: appointment.time,
+          is_paid: appointment.isPaid,
+          amount: appointment.amount,
+          notes: appointment.notes || null
+        }]);
 
       if (error) throw error;
-
-      setState(prev => ({
-        ...prev,
-        appointments: [...prev.appointments, data]
-      }));
     } catch (error) {
       console.error('Error adding appointment:', error);
       throw error;
@@ -238,17 +264,18 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { error } = await supabase
         .from('appointments')
-        .update(appointment)
+        .update({
+          client_id: appointment.clientId,
+          service_id: appointment.serviceId,
+          date: appointment.date,
+          time: appointment.time,
+          is_paid: appointment.isPaid,
+          amount: appointment.amount,
+          notes: appointment.notes || null
+        })
         .eq('id', appointment.id);
 
       if (error) throw error;
-
-      setState(prev => ({
-        ...prev,
-        appointments: prev.appointments.map(a =>
-          a.id === appointment.id ? appointment : a
-        )
-      }));
     } catch (error) {
       console.error('Error updating appointment:', error);
       throw error;
@@ -263,11 +290,6 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', id);
 
       if (error) throw error;
-
-      setState(prev => ({
-        ...prev,
-        appointments: prev.appointments.filter(a => a.id !== id)
-      }));
     } catch (error) {
       console.error('Error removing appointment:', error);
       throw error;

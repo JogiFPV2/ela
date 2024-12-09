@@ -23,9 +23,3 @@ export interface Appointment {
   amount: number;
   notes?: string;
 }
-
-export interface AppState {
-  clients: Client[];
-  services: Service[];
-  appointments: Appointment[];
-}

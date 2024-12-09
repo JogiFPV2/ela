@@ -11,18 +11,20 @@ export const Clients = () => {
   const [newClient, setNewClient] = useState({
     name: '',
     phone: '',
+    email: '', // Adding email field as it's in the schema
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const client: Client = {
-      ...newClient,
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-    };
-    addClient(client);
-    setNewClient({ name: '', phone: '' });
-    setShowForm(false);
+    try {
+      // Don't generate ID here, let Supabase handle it
+      await addClient(newClient);
+      setNewClient({ name: '', phone: '', email: '' });
+      setShowForm(false);
+    } catch (error) {
+      console.error('Error adding client:', error);
+      alert('Nie udało się dodać klienta. Spróbuj ponownie.');
+    }
   };
 
   const navigateToHistory = (client: Client) => {
@@ -44,7 +46,7 @@ export const Clients = () => {
 
       {showForm && (
         <form onSubmit={handleSubmit} className="card p-6 mb-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="form-label">Imię i nazwisko</label>
               <input
@@ -53,6 +55,7 @@ export const Clients = () => {
                 value={newClient.name}
                 onChange={(e) => setNewClient({ ...newClient, name: e.target.value })}
                 className="form-input"
+                placeholder="Jan Kowalski"
               />
             </div>
             <div>
@@ -63,6 +66,17 @@ export const Clients = () => {
                 value={newClient.phone}
                 onChange={(e) => setNewClient({ ...newClient, phone: e.target.value })}
                 className="form-input"
+                placeholder="+48 123 456 789"
+              />
+            </div>
+            <div>
+              <label className="form-label">Email</label>
+              <input
+                type="email"
+                value={newClient.email}
+                onChange={(e) => setNewClient({ ...newClient, email: e.target.value })}
+                className="form-input"
+                placeholder="jan@example.com"
               />
             </div>
           </div>
@@ -90,6 +104,7 @@ export const Clients = () => {
             <tr className="border-b border-gray-100">
               <th className="table-header">Imię i nazwisko</th>
               <th className="table-header">Telefon</th>
+              <th className="table-header">Email</th>
               <th className="table-header">Data dodania</th>
               <th className="table-header w-32"></th>
             </tr>
@@ -99,6 +114,7 @@ export const Clients = () => {
               <tr key={client.id} className="border-b border-gray-100">
                 <td className="table-cell">{client.name}</td>
                 <td className="table-cell">{client.phone}</td>
+                <td className="table-cell">{client.email || '-'}</td>
                 <td className="table-cell">
                   {new Date(client.createdAt).toLocaleDateString()}
                 </td>
