@@ -12,7 +12,7 @@ export const History = () => {
   const location = useLocation();
   const { state } = useApp();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export const History = () => {
 
   const clearFilters = () => {
     setSelectedClient(null);
-    setSelectedDate(undefined);
+    setSelectedDate(null);
   };
 
   return (
